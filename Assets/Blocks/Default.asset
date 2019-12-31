@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd221ddee11aa4ed3a130b83dfd1f7f8, type: 3}
+  m_Name: Default
+  m_EditorClassIdentifier: 
+  miningPower: 1
+  attackPower: 1
+  durability: -1
+  sprite: {fileID: 0}
+  rects:
+  - serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0.25
+    height: 0.25
+  - serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0.25
+    height: 0.25
+  - serializedVersion: 2
+    x: 0.25
+    y: 0
+    width: 0.25
+    height: 0.25
+  - serializedVersion: 2
+    x: 0.5
+    y: 0
+    width: 0.25
+    height: 0.25
+  - serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0.25
+    height: 0.25
+  - serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0.25
+    height: 0.25
+  restistance: 1
+  front: {fileID: 2800000, guid: 07c62f4aa32ad40ddbb4d40a6f250d12, type: 3}
+  back: {fileID: 2800000, guid: 1eabcf95290cb4c17b575fed6985f4c1, type: 3}
+  top: {fileID: 2800000, guid: e710393efcba640a180c90b69e0c6c95, type: 3}
+  bottom: {fileID: 2800000, guid: c293e7993aad84428a8dd66ebb06742d, type: 3}
+  left: {fileID: 2800000, guid: e3e5fa8ab92d749dd82f31813779308e, type: 3}
+  right: {fileID: 2800000, guid: 7632d6d999d21410bbfa39cf57d103b2, type: 3}

@@ -45,25 +45,22 @@ public class World : MonoBehaviour
                 Debug.Log(this.Noise(x, z));
                 var y = Mathf.FloorToInt(this.Noise(x, z) * size.y);
 
-                if (y >= 0)
+                // Grass
+                set.Add(this.SetBlock("test:grass", new Vector3Int(x, y, z)));
+
+                // Dirt
+                var dirtLimit = y - 4;
+                for (y -= 1; y >= dirtLimit && y >= 0; y--)
                 {
-                    // Grass
-                    set.Add(this.SetBlock("test:grass", new Vector3Int(x, y, z)));
+                    var chunk = this.SetBlock("test:dirt", new Vector3Int(x, y, z));
+                    set.Add(chunk);
+                }
 
-                    // Dirt
-                    var dirtLimit = y - 4;
-                    for (y -= 1; y >= dirtLimit && y >= 0; y--)
-                    {
-                        var chunk = this.SetBlock("test:dirt", new Vector3Int(x, y, z));
-                        set.Add(chunk);
-                    }
-
-                    // Stone
-                    for (; y >= 0; y--)
-                    {
-                        var chunk = this.SetBlock("test:stone", new Vector3Int(x, y, z));
-                        set.Add(chunk);
-                    }
+                // Stone
+                for (; y >= 0; y--)
+                {
+                    var chunk = this.SetBlock("test:stone", new Vector3Int(x, y, z));
+                    set.Add(chunk);
                 }
             }
         }
@@ -90,7 +87,7 @@ public class World : MonoBehaviour
         var y = coordinates.y % 16;
         var z = coordinates.z % 16;
 
-        chunk.blocks[x, y, z] = block;
+        chunk.SetBlock(new Vector3Int(x, y, z), block);
 
         return chunk;
     }

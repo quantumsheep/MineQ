@@ -60,6 +60,20 @@ public class ChunkMesh : MonoBehaviour
         this.UpdateChunk();
     }
 
+    public void SetBlock(Vector3Int coordinates, BlockScriptableObject block)
+    {
+        var x = this.CorrectChunkCoordinate(coordinates.x);
+        var y = this.CorrectChunkCoordinate(coordinates.y);
+        var z = this.CorrectChunkCoordinate(coordinates.z);
+
+        this.blocks[x, y, z] = block;
+    }
+
+    private int CorrectChunkCoordinate(int axis)
+    {
+        return axis >= 0 ? axis : (axis + this.size);
+    }
+
     public void UpdateChunk()
     {
         this.filter.mesh = this.GenerateMesh();

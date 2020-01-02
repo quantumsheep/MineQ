@@ -26,6 +26,7 @@ public class Chunk : MonoBehaviour
     private Bounds bounds;
 
     private bool chunkLoaded = false;
+    private bool shouldUpdateMesh = false;
 
     void Awake()
     {
@@ -48,7 +49,12 @@ public class Chunk : MonoBehaviour
         this.renderer.material.mainTexture = this.world.itemTable.GetBlockAtlasTexture();
         this.Init();
 
-        this.mesh = new ChunkMesh(this.world, this.coordinates, ref this.blocks);
+        this.mesh = new ChunkMesh(this.world, this.coordinates, this.blocks, this.RenderCallback);
+    }
+
+    private void RenderCallback()
+    {
+        this.shouldUpdateMesh = true;
     }
 
     void Update()
@@ -57,6 +63,23 @@ public class Chunk : MonoBehaviour
         {
             this.chunkLoaded = true;
             StartCoroutine(this.StartFirstRender());
+        }
+
+        if (this.shouldUpdateMesh)
+        {
+            this.shouldUpdateMesh = false;
+
+            var mesh = new Mesh();
+            mesh.vertices = this.mesh.vertices;
+            mesh.triangles = this.mesh.triangles;
+            mesh.uv = this.mesh.uv;
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            mesh.Optimize();
+            mesh.uv = this.mesh.uv;
+
+            this.filter.mesh = mesh;
+            this.collider.sharedMesh = this.filter.mesh;
         }
 
         this.FrustrumCulling();
@@ -138,34 +161,34 @@ public class Chunk : MonoBehaviour
         if (x == 0)
         {
             var neighbour = this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(-1, 0, 0));
-            neighbour?.RenderChunk();
+            neighbour?.NeighbourRenderChunk();
         }
         else if (x == max)
         {
             var neighbour = this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(1, 0, 0));
-            neighbour?.RenderChunk();
+            neighbour?.NeighbourRenderChunk();
         }
 
         if (y == 0)
         {
             var neighbour = this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, -1, 0));
-            neighbour?.RenderChunk();
+            neighbour?.NeighbourRenderChunk();
         }
         else if (y == max)
         {
             var neighbour = this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 1, 0));
-            neighbour?.RenderChunk();
+            neighbour?.NeighbourRenderChunk();
         }
 
         if (z == 0)
         {
             var neighbour = this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, -1));
-            neighbour?.RenderChunk();
+            neighbour?.NeighbourRenderChunk();
         }
         else if (z == max)
         {
             var neighbour = this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, 1));
-            neighbour?.RenderChunk();
+            neighbour?.NeighbourRenderChunk();
         }
 
         this.RenderChunk();
@@ -190,28 +213,40 @@ public class Chunk : MonoBehaviour
         this.RenderChunk();
         yield return null;
 
-        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, -1))?.RenderChunk();
+        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, -1))?.NeighbourRenderChunk();
         yield return null;
 
-        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, 1))?.RenderChunk();
+        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, 1))?.NeighbourRenderChunk();
         yield return null;
 
-        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 1, 0))?.RenderChunk();
+        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 1, 0))?.NeighbourRenderChunk();
         yield return null;
 
-        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, -1, 0))?.RenderChunk();
+        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, -1, 0))?.NeighbourRenderChunk();
         yield return null;
 
-        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(1, 0, 0))?.RenderChunk();
+        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(1, 0, 0))?.NeighbourRenderChunk();
         yield return null;
 
-        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(-1, 0, 0))?.RenderChunk();
+        this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(-1, 0, 0))?.NeighbourRenderChunk();
         yield return null;
+    }
+
+    public void NeighbourRenderChunk()
+    {
+        if (this.chunkLoaded)
+        {
+            this.RenderChunk();
+        }
     }
 
     public void RenderChunk()
     {
-        this.filter.mesh = this.mesh.GenerateMesh();
-        this.collider.sharedMesh = this.filter.mesh;
+        this.mesh.StartRender();
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.DrawWireCube(this.bounds.center, this.bounds.size);
     }
 }

@@ -43,8 +43,6 @@ public class World : MonoBehaviour
 
         if (this.lastPlayerChunk != currentPlayerChunk)
         {
-            Debug.Log("Generating new chunks");
-
             this.lastPlayerChunk = currentPlayerChunk;
 
             this.DestroyOutOfRangeChunks();
@@ -80,7 +78,7 @@ public class World : MonoBehaviour
 
     private bool IsOutOfRange(Vector3Int chunkCoordinates)
     {
-        return Vector3Int.Distance(this.lastPlayerChunk, chunkCoordinates) > (this.viewDistance * 2);
+        return Vector3Int.Distance(this.lastPlayerChunk, chunkCoordinates) > this.viewDistance;
     }
 
     public Vector3Int WorldCoordinateToChunk(Vector3 coordinates)
@@ -99,21 +97,192 @@ public class World : MonoBehaviour
         var radius = this.renderDistance;
         var center = this.lastPlayerChunk;
 
-        for (int x = -radius; x <= radius; x++)
+        this.GenerateChunkIfInRange(center);
+        for (int i = 1; i <= radius; i++)
         {
-            for (int z = -radius; z <= radius; z++)
-            {
-                for (int y = -radius; y <= radius; y++)
-                {
-                    var coordinates = new Vector3Int(x, y, z) + center;
+            this.GenerateChunkIfInRange(new Vector3Int(i, 0, 0) + center);
+            this.GenerateChunkIfInRange(new Vector3Int(-i, 0, 0) + center);
+            this.GenerateChunkIfInRange(new Vector3Int(0, i, 0) + center);
+            this.GenerateChunkIfInRange(new Vector3Int(0, -i, 0) + center);
+            this.GenerateChunkIfInRange(new Vector3Int(0, 0, i) + center);
+            this.GenerateChunkIfInRange(new Vector3Int(0, 0, -i) + center);
 
-                    if (!this.IsOutOfRange(coordinates) && coordinates.y >= 0)
-                    {
-                        this.GetChunk(coordinates);
-                        yield return null;
-                    }
+            yield return null;
+
+            for (int j = 1; j <= i; j++)
+            {
+                // +x
+                this.GenerateChunkIfInRange(new Vector3Int(i, j, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, -j, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, 0, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, 0, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, j, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, -j, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, j, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(i, -j, -j) + center);
+
+                yield return null;
+
+                // -x
+                this.GenerateChunkIfInRange(new Vector3Int(-i, j, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, -j, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, 0, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, 0, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, j, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, -j, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, j, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-i, -j, -j) + center);
+
+                yield return null;
+
+                // +z
+                this.GenerateChunkIfInRange(new Vector3Int(0, j, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(0, -j, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, 0, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, 0, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, j, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, -j, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, j, i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, -j, i) + center);
+
+                yield return null;
+
+                // -z
+                this.GenerateChunkIfInRange(new Vector3Int(0, j, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(0, -j, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, 0, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, 0, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, j, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, -j, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, j, -i) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, -j, -i) + center);
+
+                yield return null;
+
+                // +y
+                this.GenerateChunkIfInRange(new Vector3Int(0, i, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(0, i, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, i, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, i, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, i, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, i, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, i, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, i, -j) + center);
+
+                yield return null;
+
+                // -y
+                this.GenerateChunkIfInRange(new Vector3Int(0, -i, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(0, -i, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, -i, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, -i, 0) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, -i, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(j, -i, -j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, -i, j) + center);
+                this.GenerateChunkIfInRange(new Vector3Int(-j, -i, -j) + center);
+
+                yield return null;
+
+                // +x
+                for (int k = 1; k < j; k++)
+                {
+                    this.GenerateChunkIfInRange(new Vector3Int(i, j, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, -j, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, j, -k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, -j, -k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, k, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, -k, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, k, -j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(i, -k, -j) + center);
+
+                    yield return null;
+                }
+
+                // -x
+                for (int k = 1; k < j; k++)
+                {
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, j, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, -j, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, j, -k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, -j, -k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, k, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, -k, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, k, -j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-i, -k, -j) + center);
+
+                    yield return null;
+                }
+
+                // +z
+                for (int k = 1; k < j; k++)
+                {
+                    this.GenerateChunkIfInRange(new Vector3Int(k, j, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(k, -j, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, j, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, -j, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, k, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, -k, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, k, i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, -k, i) + center);
+
+                    yield return null;
+                }
+
+                // -z
+                for (int k = 1; k < j; k++)
+                {
+                    this.GenerateChunkIfInRange(new Vector3Int(k, j, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(k, -j, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, j, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, -j, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, k, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, -k, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, k, -i) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, -k, -i) + center);
+
+                    yield return null;
+                }
+
+                // +y
+                for (int k = 1; k < j; k++)
+                {
+                    this.GenerateChunkIfInRange(new Vector3Int(k, i, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(k, i, -j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, i, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, i, -j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, i, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, i, -k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, i, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, i, -k) + center);
+
+                    yield return null;
+                }
+
+                // -y
+                for (int k = 1; k < j; k++)
+                {
+                    this.GenerateChunkIfInRange(new Vector3Int(k, -i, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(k, -i, -j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, -i, j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-k, -i, -j) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, -i, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(j, -i, -k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, -i, k) + center);
+                    this.GenerateChunkIfInRange(new Vector3Int(-j, -i, -k) + center);
+
+                    yield return null;
                 }
             }
+
+            yield return null;
+        }
+    }
+
+    public void GenerateChunkIfInRange(Vector3Int coordinates)
+    {
+        if (!this.IsOutOfRange(coordinates) && coordinates.y >= 0)
+        {
+            this.GetChunk(coordinates);
         }
     }
 

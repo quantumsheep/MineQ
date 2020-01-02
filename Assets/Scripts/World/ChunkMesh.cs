@@ -1,9 +1,18 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Linq;
 using UnityEngine;
 
 public class ChunkMesh
 {
+    public delegate void MeshRenderCallback();
+
+    private MeshRenderCallback renderCallback = null;
+
+    public Vector3[] vertices;
+    public int[] triangles;
+    public Vector2[] uv;
+
     private World world;
     private Vector3Int coordinates;
 
@@ -11,16 +20,24 @@ public class ChunkMesh
 
     private BlockScriptableObject[,,] blocks;
 
-    public ChunkMesh(World world, Vector3Int chunkCoordinates, ref BlockScriptableObject[,,] blocks)
+    public ChunkMesh(World world, Vector3Int chunkCoordinates, BlockScriptableObject[,,] blocks, MeshRenderCallback renderCallback)
     {
         this.world = world;
         this.coordinates = chunkCoordinates;
         this.blocks = blocks;
 
+        this.renderCallback = renderCallback;
+
         this.neighbours = new ChunkNeighbours(this.world, this.coordinates);
     }
 
-    public Mesh GenerateMesh()
+    public void StartRender()
+    {
+        var thread = new Thread(this.GenerateMeshThread);
+        thread.Start();
+    }
+
+    private void GenerateMeshThread()
     {
         this.neighbours.Update();
 
@@ -60,16 +77,11 @@ public class ChunkMesh
             }
         }
 
-        var mesh = new Mesh();
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.uv = uv.ToArray();
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-        mesh.Optimize();
-        mesh.uv = uv.ToArray();
+        this.vertices = vertices.ToArray();
+        this.triangles = triangles.ToArray();
+        this.uv = uv.ToArray();
 
-        return mesh;
+        this.renderCallback();
     }
 
     private (List<Vector3> vertices, List<int> triangles, List<Vector2> uv) GenerateBlock(BlockScriptableObject block, bool hasFront, bool hasBack, bool hasTop, bool hasBottom, bool hasLeft, bool hasRight)

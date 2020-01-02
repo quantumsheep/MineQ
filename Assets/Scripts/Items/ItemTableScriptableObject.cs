@@ -12,6 +12,12 @@ public class ItemTableScriptableObject : ScriptableObject
         return this.items.Find(item => item.id == id);
     }
 
+    public BlockScriptableObject GetBlock(string id)
+    {
+        var block = this.GetItem(id);
+        return block.item as BlockScriptableObject;
+    }
+
     private Texture2D blocksAtlas = null;
     private Texture2D itemsAtlas = null;
 

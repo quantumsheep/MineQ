@@ -115,11 +115,6 @@ public static class Cube
 
     public static (Vector3[] vertices, int[] triangles, Vector2[] uv) Generate(Rect[] rects)
     {
-        return (vertices, triangles, GetUV(rects));
-    }
-
-    public static (List<Vector3> vertices, List<int> triangles, List<Vector2> uv) GenerateAsList(Rect[] rects)
-    {
-        return (vertices.ToList(), triangles.ToList(), GetUV(rects).ToList());
+        return (vertices, triangles.ToArray(), GetUV(rects));
     }
 }

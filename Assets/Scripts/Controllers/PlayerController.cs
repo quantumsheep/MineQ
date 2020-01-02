@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
+    public new CameraController camera;
+
     public float speed = 5.0f;
     public float jumpForce = 50.0f;
 
@@ -25,23 +27,18 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        var forward = Camera.main.transform.forward;
-        forward.y = 0.0f;
+        this.transform.eulerAngles = new Vector3(0, camera.yaw, 0);
 
-        this.velocity = forward * Input.GetAxisRaw("Vertical");
-        this.velocity += Camera.main.transform.right * Input.GetAxisRaw("Horizontal");
+        this.velocity = this.transform.forward * Input.GetAxisRaw("Vertical");
+        this.velocity += this.transform.right * Input.GetAxisRaw("Horizontal");
+        this.velocity += Vector3.up * (Input.GetAxisRaw("Jump") - Input.GetAxisRaw("Duck"));
         this.velocity *= this.speed * Time.deltaTime * 10.0f;
-
-        if (Input.GetButtonDown("Jump"))
-        {
-            this.rigidbody.AddForce(new Vector3(0, this.jumpForce * 10.0f, 0));
-        }
 
         if (Input.GetMouseButtonDown(0))
         {
             if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out var hit, this.breakDistance, this.chunkMeshMask))
             {
-                var chunk = hit.collider.GetComponent<ChunkMesh>();
+                var chunk = hit.collider.GetComponent<Chunk>();
 
                 var coordinates = hit.point + -hit.normal * 0.5f;
 
@@ -57,7 +54,6 @@ public class PlayerController : MonoBehaviour
     void FixedUpdate()
     {
         var targetVelocity = velocity;
-        targetVelocity.y = this.rigidbody.velocity.y;
 
         this.rigidbody.velocity = Vector3.SmoothDamp(this.rigidbody.velocity, targetVelocity, ref targetVelocity, this.movementSmoothing);
     }

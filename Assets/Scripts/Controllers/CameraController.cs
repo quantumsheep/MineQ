@@ -7,8 +7,8 @@ public class CameraController : MonoBehaviour
 
     private bool active = false;
 
-    private float yaw = 0.0f;
-    private float pitch = 0.0f;
+    public float yaw = 0.0f;
+    public float pitch = 0.0f;
 
     void Update()
     {
@@ -17,7 +17,7 @@ public class CameraController : MonoBehaviour
             this.yaw += this.sensitivity * Input.GetAxis("Mouse X");
             this.pitch -= this.sensitivity * Input.GetAxis("Mouse Y");
 
-            this.transform.eulerAngles = new Vector3(pitch, yaw, 0.0f);
+            this.transform.localEulerAngles = new Vector3(pitch, 0.0f, 0.0f);
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System;
 using UnityEngine;
 
@@ -34,7 +35,7 @@ public class World : MonoBehaviour
         this.lastPlayerChunk = this.WorldCoordinateToChunk(Player.main.transform.position);
 
         this.seed = this.GenerateSeed(this.worldSeed.GetHashCode());
-        StartCoroutine(this.GenerateChunks());
+        StartCoroutine(this.GenerateChunksTask());
     }
 
     void Update()
@@ -46,7 +47,7 @@ public class World : MonoBehaviour
             this.lastPlayerChunk = currentPlayerChunk;
 
             this.DestroyOutOfRangeChunks();
-            StartCoroutine(this.GenerateChunks());
+            StartCoroutine(this.GenerateChunksTask());
         }
     }
 
@@ -90,6 +91,13 @@ public class World : MonoBehaviour
             Mathf.FloorToInt(coordinates.y),
             Mathf.FloorToInt(coordinates.z)
         );
+    }
+
+    private IEnumerator GenerateChunksTask()
+    {
+        StartCoroutine(this.GenerateChunks());
+
+        yield return null;
     }
 
     private IEnumerator GenerateChunks()
@@ -280,10 +288,12 @@ public class World : MonoBehaviour
 
     public void GenerateChunkIfInRange(Vector3Int coordinates)
     {
-        if (!this.IsOutOfRange(coordinates) && coordinates.y >= 0)
-        {
-            this.GetChunk(coordinates);
-        }
+        // if (!this.IsOutOfRange(coordinates) && coordinates.y >= 0)
+        // {
+        //     this.GetChunk(coordinates);
+        // }
+
+        this.GetChunk(coordinates);
     }
 
     public float Noise(float x, float z)

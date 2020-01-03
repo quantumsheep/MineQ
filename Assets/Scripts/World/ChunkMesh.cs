@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Linq;
 using UnityEngine;
 
@@ -33,8 +34,7 @@ public class ChunkMesh
 
     public void StartRender()
     {
-        var thread = new Thread(this.GenerateMeshThread);
-        thread.Start();
+        this.GenerateMeshThread();
     }
 
     private void GenerateMeshThread()

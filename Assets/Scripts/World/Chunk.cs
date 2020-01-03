@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Linq;
 using System;
 using UnityEngine;
@@ -47,9 +48,9 @@ public class Chunk : MonoBehaviour
     void Start()
     {
         this.renderer.material.mainTexture = this.world.itemTable.GetBlockAtlasTexture();
-        this.Init();
-
         this.mesh = new ChunkMesh(this.world, this.coordinates, this.blocks, this.RenderCallback);
+
+        Task.Factory.StartNew(this.Init);
     }
 
     private void RenderCallback()
@@ -59,12 +60,6 @@ public class Chunk : MonoBehaviour
 
     void Update()
     {
-        if (!this.chunkLoaded)
-        {
-            this.chunkLoaded = true;
-            StartCoroutine(this.StartFirstRender());
-        }
-
         if (this.shouldUpdateMesh)
         {
             this.shouldUpdateMesh = false;
@@ -87,19 +82,21 @@ public class Chunk : MonoBehaviour
 
     public void Init()
     {
+        var worldCoordinates = this.coordinates * Chunk.Size;
+
         for (int x = 0; x < Chunk.Size; x++)
         {
-            var worldX = x + this.transform.position.x;
+            var worldX = x + worldCoordinates.x;
 
             for (int z = 0; z < Chunk.Size; z++)
             {
-                var worldZ = z + this.transform.position.z;
+                var worldZ = z + worldCoordinates.z;
 
                 var height = Mathf.FloorToInt(this.world.Noise(worldX, worldZ) * this.world.maximumLandHeight) + this.world.minimumSeeLevel;
 
                 for (int y = 0; y < Chunk.Size; y++)
                 {
-                    var worldY = y + this.transform.position.y;
+                    var worldY = y + worldCoordinates.y;
 
                     if (worldY <= height)
                     {
@@ -122,6 +119,8 @@ public class Chunk : MonoBehaviour
                 }
             }
         }
+
+        this.StartFirstRender();
     }
 
     private void CreateBoundsBox()
@@ -191,7 +190,7 @@ public class Chunk : MonoBehaviour
             neighbour?.NeighbourRenderChunk();
         }
 
-        this.RenderChunk();
+        Task.Factory.StartNew(this.RenderChunk);
     }
 
     public void SetBlock(Vector3Int coordinates, BlockScriptableObject block)
@@ -208,35 +207,23 @@ public class Chunk : MonoBehaviour
         return axis >= 0 ? axis : (axis + Chunk.Size);
     }
 
-    private IEnumerator StartFirstRender()
+    private void StartFirstRender()
     {
         this.RenderChunk();
-        yield return null;
 
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, -1))?.NeighbourRenderChunk();
-        yield return null;
-
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, 1))?.NeighbourRenderChunk();
-        yield return null;
-
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 1, 0))?.NeighbourRenderChunk();
-        yield return null;
-
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, -1, 0))?.NeighbourRenderChunk();
-        yield return null;
-
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(1, 0, 0))?.NeighbourRenderChunk();
-        yield return null;
-
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(-1, 0, 0))?.NeighbourRenderChunk();
-        yield return null;
     }
 
     public void NeighbourRenderChunk()
     {
         if (this.chunkLoaded)
         {
-            this.RenderChunk();
+            Task.Factory.StartNew(this.RenderChunk);
         }
     }
 

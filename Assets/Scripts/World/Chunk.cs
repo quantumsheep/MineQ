@@ -31,8 +31,7 @@ public class Chunk : MonoBehaviour
 
     private Bounds bounds;
 
-    private bool chunkLoaded = false;
-    private bool shouldUpdateMesh = false;
+    public bool loaded = false;
 
     void Awake()
     {
@@ -59,31 +58,9 @@ public class Chunk : MonoBehaviour
         this.Init();
     }
 
-    private void RenderCallback()
-    {
-        this.shouldUpdateMesh = true;
-    }
-
     void Update()
     {
-        if (this.shouldUpdateMesh)
-        {
-            this.shouldUpdateMesh = false;
-
-            var mesh = new Mesh();
-            mesh.vertices = this.vertices.ToArray();
-            mesh.triangles = this.triangles.ToArray();
-            mesh.uv = this.uv.ToArray();
-            mesh.RecalculateBounds();
-            mesh.RecalculateNormals();
-            mesh.Optimize();
-            // mesh.uv = this.mesh.uv;
-
-            this.filter.mesh = mesh;
-            this.collider.sharedMesh = this.filter.mesh;
-        }
-
-        this.FrustrumCulling();
+        // this.FrustrumCulling();
     }
 
     public void Init()
@@ -104,7 +81,7 @@ public class Chunk : MonoBehaviour
                 {
                     var worldY = y + worldCoordinates.y;
 
-                    if (worldY <= height && this.world.Noise(worldX, worldZ, worldY) <= 0.55f)
+                    if (worldY <= height && this.world.Noise(worldX, worldZ, worldY) <= 0.3f)
                     {
                         if (worldY == height)
                         {
@@ -126,7 +103,7 @@ public class Chunk : MonoBehaviour
             }
         }
 
-        this.chunkLoaded = true;
+        this.loaded = true;
         this.StartFirstRender();
     }
 
@@ -156,9 +133,9 @@ public class Chunk : MonoBehaviour
 
     public void BreakBlock(Vector3Int coordinates)
     {
-        var x = this.CorrectChunkCoordinate(coordinates.x);
-        var y = this.CorrectChunkCoordinate(coordinates.y);
-        var z = this.CorrectChunkCoordinate(coordinates.z);
+        var x = Chunk.CorrectBlockCoordinate(coordinates.x);
+        var y = Chunk.CorrectBlockCoordinate(coordinates.y);
+        var z = Chunk.CorrectBlockCoordinate(coordinates.z);
 
         this.blocks[x, y, z] = null;
 
@@ -197,26 +174,26 @@ public class Chunk : MonoBehaviour
             neighbour?.NeighbourRenderChunk();
         }
 
-        this.GenerateMesh();
+        StartCoroutine(this.GenerateMesh());
     }
 
     public void SetBlock(Vector3Int coordinates, BlockScriptableObject block)
     {
-        var x = this.CorrectChunkCoordinate(coordinates.x);
-        var y = this.CorrectChunkCoordinate(coordinates.y);
-        var z = this.CorrectChunkCoordinate(coordinates.z);
+        var x = Chunk.CorrectBlockCoordinate(coordinates.x);
+        var y = Chunk.CorrectBlockCoordinate(coordinates.y);
+        var z = Chunk.CorrectBlockCoordinate(coordinates.z);
 
         this.blocks[x, y, z] = block;
     }
 
-    private int CorrectChunkCoordinate(int axis)
+    public static int CorrectBlockCoordinate(int axis)
     {
         return axis >= 0 ? axis : (axis + Chunk.Size);
     }
 
     private void StartFirstRender()
     {
-        this.GenerateMesh();
+        StartCoroutine(this.GenerateMesh());
 
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, -1))?.NeighbourRenderChunk();
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, 1))?.NeighbourRenderChunk();
@@ -228,15 +205,17 @@ public class Chunk : MonoBehaviour
 
     public void NeighbourRenderChunk()
     {
-        if (this.chunkLoaded)
+        if (this.loaded)
         {
-            this.GenerateMesh();
+            StartCoroutine(this.GenerateMesh());
         }
     }
 
-    public void GenerateMesh()
+    public IEnumerator GenerateMesh()
     {
         this.neighbours.Update();
+
+        yield return null;
 
         this.vertices = new List<Vector3>();
         this.triangles = new List<int>();
@@ -260,19 +239,31 @@ public class Chunk : MonoBehaviour
             }
         }
 
-        this.shouldUpdateMesh = true;
+        yield return null;
+
+        var mesh = new Mesh();
+        mesh.vertices = this.vertices.ToArray();
+        mesh.triangles = this.triangles.ToArray();
+        mesh.uv = this.uv.ToArray();
+        mesh.RecalculateBounds();
+        mesh.RecalculateNormals();
+        mesh.Optimize();
+        // mesh.uv = this.mesh.uv;
+
+        this.filter.mesh = mesh;
+        this.collider.sharedMesh = this.filter.mesh;
     }
 
     private bool[] CheckBlock(int x, int y, int z)
     {
         var max = Chunk.Size - 1;
 
-        var hasBack = (z > 0) ? (this.blocks[x, y, z - 1] == null) : (this.neighbours.front?.blocks[x, y, max] == null);
-        var hasFront = (z < max) ? (this.blocks[x, y, z + 1] == null) : (this.neighbours.back?.blocks[x, y, 0] == null);
-        var hasTop = (y < max) ? (this.blocks[x, y + 1, z] == null) : (this.neighbours.top?.blocks[x, 0, z] == null);
-        var hasBottom = (y > 0) ? (this.blocks[x, y - 1, z] == null) : (this.neighbours.bottom?.blocks[x, max, z] == null);
-        var hasLeft = (x > 0) ? (this.blocks[x - 1, y, z] == null) : (this.neighbours.right?.blocks[max, y, z] == null);
-        var hasRight = (x < max) ? (this.blocks[x + 1, y, z] == null) : (this.neighbours.left?.blocks[0, y, z] == null);
+        var hasBack = (z > 0) ? (this.blocks[x, y, z - 1] == null) : (this.neighbours.front?.loaded == true && this.neighbours.front.blocks[x, y, max] == null);
+        var hasFront = (z < max) ? (this.blocks[x, y, z + 1] == null) : (this.neighbours.back?.loaded == true && this.neighbours.back.blocks[x, y, 0] == null);
+        var hasTop = (y < max) ? (this.blocks[x, y + 1, z] == null) : (this.neighbours.top?.loaded == true && this.neighbours.top.blocks[x, 0, z] == null);
+        var hasBottom = (y > 0) ? (this.blocks[x, y - 1, z] == null) : (this.neighbours.bottom?.loaded == true && this.neighbours.bottom.blocks[x, max, z] == null);
+        var hasLeft = (x > 0) ? (this.blocks[x - 1, y, z] == null) : (this.neighbours.right?.loaded == true && this.neighbours.right.blocks[max, y, z] == null);
+        var hasRight = (x < max) ? (this.blocks[x + 1, y, z] == null) : (this.neighbours.left?.loaded == true && this.neighbours.left.blocks[0, y, z] == null);
 
         return new bool[] {
             hasBack,

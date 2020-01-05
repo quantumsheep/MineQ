@@ -163,7 +163,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 127259031}
   m_Material: {fileID: 13400000, guid: 5777731ae8e4d44c190010837d98ede1, type: 2}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
@@ -720,12 +720,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   size: {x: 32, y: 32}
   noiseScale: 32
-  worldSeed: Hello :)
+  worldSeed: 
   seed: 0
   minimumSeeLevel: 40
   maximumLandHeight: 80
-  renderDistance: 1
-  viewDistance: 5
+  renderDistance: 4
+  viewDistance: 20
   itemTable: {fileID: 11400000, guid: 42cb2e6c15bca4e9fabdccb38d35c4c5, type: 2}
   ChunkPrefab: {fileID: 8314088254131425182, guid: 89100dc351b6341a7960b7b590c5db9e,
     type: 3}
@@ -773,8 +773,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a633fc6258df4d8abefad3911e0867a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  world: {fileID: 1897090872}
   camera: {fileID: 963194229}
-  speed: 50
+  speed: 200
   jumpForce: 20
   breakDistance: 5
   chunkMeshMask:
@@ -805,7 +806,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2116802095}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.69, y: 85.2, z: 4.02}
+  m_LocalPosition: {x: 4.69, y: 23.1, z: 4.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 127259032}

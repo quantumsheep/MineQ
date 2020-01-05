@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
+    public World world;
+
     public new CameraController camera;
 
     public float speed = 5.0f;
@@ -36,7 +38,18 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out var hit, this.breakDistance, this.chunkMeshMask))
+            var blockCoordinates = this.world.WorldCoordinateToBlock(camera.transform.position);
+            var chunkCoordinates = this.world.WorldCoordinateToChunk(camera.transform.position);
+
+            var currentChunk = this.world.chunks[chunkCoordinates];
+
+            Debug.Log(blockCoordinates);
+
+            if (currentChunk.blocks[blockCoordinates.x, blockCoordinates.y, blockCoordinates.z] != null)
+            {
+                currentChunk.BreakBlock(blockCoordinates);
+            }
+            else if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out var hit, this.breakDistance, this.chunkMeshMask))
             {
                 var chunk = hit.collider.GetComponent<Chunk>();
 

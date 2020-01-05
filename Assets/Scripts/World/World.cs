@@ -34,7 +34,7 @@ public class World : MonoBehaviour
 
         this.lastPlayerChunk = this.WorldCoordinateToChunk(Player.main.transform.position);
 
-        this.seed = this.GenerateSeed(this.worldSeed.GetHashCode());
+        this.seed = this.GenerateSeed(this.worldSeed);
         StartCoroutine(this.GenerateChunksTask());
     }
 
@@ -51,9 +51,14 @@ public class World : MonoBehaviour
         }
     }
 
-    private float GenerateSeed(int hashCode)
+    private float GenerateSeed(string seed)
     {
-        System.Random random = new System.Random(hashCode);
+        if (seed == String.Empty)
+        {
+            return UnityEngine.Random.Range((float)Int16.MinValue, (float)Int16.MaxValue);
+        }
+
+        System.Random random = new System.Random(seed.GetHashCode());
         return (float)(random.NextDouble() * (Int16.MaxValue - (double)Int16.MinValue)) + Int16.MinValue;
     }
 
@@ -90,6 +95,15 @@ public class World : MonoBehaviour
             Mathf.FloorToInt(coordinates.x),
             Mathf.FloorToInt(coordinates.y),
             Mathf.FloorToInt(coordinates.z)
+        );
+    }
+
+    public Vector3Int WorldCoordinateToBlock(Vector3 coordinates)
+    {
+        return new Vector3Int(
+            Chunk.CorrectBlockCoordinate(Mathf.RoundToInt(coordinates.x % Chunk.Size)),
+            Chunk.CorrectBlockCoordinate(Mathf.RoundToInt(coordinates.y % Chunk.Size)),
+            Chunk.CorrectBlockCoordinate(Mathf.RoundToInt(coordinates.z % Chunk.Size))
         );
     }
 

@@ -6,8 +6,8 @@ public class BlockScriptableObject : ItemScriptableObject
 {
     public float restistance = 1.0f;
 
-    public Texture2D front;
     public Texture2D back;
+    public Texture2D front;
     public Texture2D top;
     public Texture2D bottom;
     public Texture2D left;

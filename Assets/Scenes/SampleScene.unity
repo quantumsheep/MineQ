@@ -724,8 +724,8 @@ MonoBehaviour:
   seed: 0
   minimumSeeLevel: 40
   maximumLandHeight: 80
-  renderDistance: 4
-  viewDistance: 10
+  renderDistance: 1
+  viewDistance: 5
   itemTable: {fileID: 11400000, guid: 42cb2e6c15bca4e9fabdccb38d35c4c5, type: 2}
   ChunkPrefab: {fileID: 8314088254131425182, guid: 89100dc351b6341a7960b7b590c5db9e,
     type: 3}

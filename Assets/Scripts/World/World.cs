@@ -298,7 +298,12 @@ public class World : MonoBehaviour
 
     public float Noise(float x, float z)
     {
-        return Mathf.PerlinNoise(((x / this.noiseScale) + this.seed), ((z / this.noiseScale) + this.seed));
+        return Perlin.Noise(((x / this.noiseScale) + this.seed), ((z / this.noiseScale) + this.seed));
+    }
+
+    public float Noise(float x, float z, float y)
+    {
+        return Perlin.Noise(((x / this.noiseScale) + this.seed), ((z / this.noiseScale) + this.seed), ((y / this.noiseScale) + this.seed));
     }
 
     public Chunk SetBlock(string id, Vector3Int coordinates)

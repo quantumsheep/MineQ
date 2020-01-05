@@ -18,7 +18,12 @@ public class Chunk : MonoBehaviour
     [HideInInspector]
     public BlockScriptableObject[,,] blocks = null;
 
-    private ChunkMesh mesh;
+    private ChunkNeighbours neighbours;
+
+    public List<Vector3> vertices;
+    public List<int> triangles;
+    public List<Vector2> uv;
+    public int verticesIndex = 0;
 
     private MeshFilter filter;
     private new MeshCollider collider;
@@ -48,9 +53,10 @@ public class Chunk : MonoBehaviour
     void Start()
     {
         this.renderer.material.mainTexture = this.world.itemTable.GetBlockAtlasTexture();
-        this.mesh = new ChunkMesh(this.world, this.coordinates, this.blocks, this.RenderCallback);
 
-        Task.Factory.StartNew(this.Init);
+        this.neighbours = new ChunkNeighbours(this.world, this.coordinates);
+
+        this.Init();
     }
 
     private void RenderCallback()
@@ -65,13 +71,13 @@ public class Chunk : MonoBehaviour
             this.shouldUpdateMesh = false;
 
             var mesh = new Mesh();
-            mesh.vertices = this.mesh.vertices;
-            mesh.triangles = this.mesh.triangles;
-            mesh.uv = this.mesh.uv;
+            mesh.vertices = this.vertices.ToArray();
+            mesh.triangles = this.triangles.ToArray();
+            mesh.uv = this.uv.ToArray();
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
             mesh.Optimize();
-            mesh.uv = this.mesh.uv;
+            // mesh.uv = this.mesh.uv;
 
             this.filter.mesh = mesh;
             this.collider.sharedMesh = this.filter.mesh;
@@ -98,7 +104,7 @@ public class Chunk : MonoBehaviour
                 {
                     var worldY = y + worldCoordinates.y;
 
-                    if (worldY <= height)
+                    if (worldY <= height && this.world.Noise(worldX, worldZ, worldY) <= 0.55f)
                     {
                         if (worldY == height)
                         {
@@ -120,6 +126,7 @@ public class Chunk : MonoBehaviour
             }
         }
 
+        this.chunkLoaded = true;
         this.StartFirstRender();
     }
 
@@ -190,7 +197,7 @@ public class Chunk : MonoBehaviour
             neighbour?.NeighbourRenderChunk();
         }
 
-        Task.Factory.StartNew(this.RenderChunk);
+        this.GenerateMesh();
     }
 
     public void SetBlock(Vector3Int coordinates, BlockScriptableObject block)
@@ -209,7 +216,7 @@ public class Chunk : MonoBehaviour
 
     private void StartFirstRender()
     {
-        this.RenderChunk();
+        this.GenerateMesh();
 
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, -1))?.NeighbourRenderChunk();
         this.world.GetChunkNoCheck(this.coordinates + new Vector3Int(0, 0, 1))?.NeighbourRenderChunk();
@@ -223,13 +230,88 @@ public class Chunk : MonoBehaviour
     {
         if (this.chunkLoaded)
         {
-            Task.Factory.StartNew(this.RenderChunk);
+            this.GenerateMesh();
         }
     }
 
-    public void RenderChunk()
+    public void GenerateMesh()
     {
-        this.mesh.StartRender();
+        this.neighbours.Update();
+
+        this.vertices = new List<Vector3>();
+        this.triangles = new List<int>();
+        this.uv = new List<Vector2>();
+
+        this.verticesIndex = 0;
+
+        for (int x = 0; x < Chunk.Size; x++)
+        {
+            for (int y = 0; y < Chunk.Size; y++)
+            {
+                for (int z = 0; z < Chunk.Size; z++)
+                {
+                    var block = this.blocks[x, y, z];
+                    if (block != null)
+                    {
+                        var position = new Vector3(x, y, z);
+                        this.GenerateBlock(block, position, this.CheckBlock(x, y, z));
+                    }
+                }
+            }
+        }
+
+        this.shouldUpdateMesh = true;
+    }
+
+    private bool[] CheckBlock(int x, int y, int z)
+    {
+        var max = Chunk.Size - 1;
+
+        var hasBack = (z > 0) ? (this.blocks[x, y, z - 1] == null) : (this.neighbours.front?.blocks[x, y, max] == null);
+        var hasFront = (z < max) ? (this.blocks[x, y, z + 1] == null) : (this.neighbours.back?.blocks[x, y, 0] == null);
+        var hasTop = (y < max) ? (this.blocks[x, y + 1, z] == null) : (this.neighbours.top?.blocks[x, 0, z] == null);
+        var hasBottom = (y > 0) ? (this.blocks[x, y - 1, z] == null) : (this.neighbours.bottom?.blocks[x, max, z] == null);
+        var hasLeft = (x > 0) ? (this.blocks[x - 1, y, z] == null) : (this.neighbours.right?.blocks[max, y, z] == null);
+        var hasRight = (x < max) ? (this.blocks[x + 1, y, z] == null) : (this.neighbours.left?.blocks[0, y, z] == null);
+
+        return new bool[] {
+            hasBack,
+            hasFront,
+            hasTop,
+            hasBottom,
+            hasLeft,
+            hasRight,
+        };
+    }
+
+    private void GenerateBlock(BlockScriptableObject block, Vector3 position, bool[] checks)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            if (checks[i])
+            {
+                this.vertices.Add(position + Cube.vertices[Cube.triangles[i, 0]]);
+                this.vertices.Add(position + Cube.vertices[Cube.triangles[i, 1]]);
+                this.vertices.Add(position + Cube.vertices[Cube.triangles[i, 2]]);
+                this.vertices.Add(position + Cube.vertices[Cube.triangles[i, 3]]);
+
+                this.triangles.Add(verticesIndex + 0);
+                this.triangles.Add(verticesIndex + 1);
+                this.triangles.Add(verticesIndex + 2);
+                this.triangles.Add(verticesIndex + 2);
+                this.triangles.Add(verticesIndex + 1);
+                this.triangles.Add(verticesIndex + 3);
+
+                var texture = block.rects[i];
+
+                this.uv.Add(new Vector2(texture.xMax, texture.yMin));
+                this.uv.Add(new Vector2(texture.xMax, texture.yMax));
+                this.uv.Add(new Vector2(texture.xMin, texture.yMin));
+                this.uv.Add(new Vector2(texture.xMin, texture.yMax));
+
+                this.verticesIndex += 4;
+            }
+        }
     }
 
     void OnDrawGizmos()
